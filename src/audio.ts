@@ -109,6 +109,18 @@ export function Audio(au: AudioContext = new (window.AudioContext || window.webk
         });
     }
 
+    // from https://stackoverflow.com/questions/22312841/waveshaper-node-in-webaudio-how-to-emulate-distortion
+    function makeDistortionCurve(amount: number = 50, gain: number = 20) {
+        const n_samples = 256;
+        const curve = new Float32Array(n_samples);
+        const deg = Math.PI / 180;
+        for (let i = 0; i < n_samples; ++i ) {
+            const x = i * 2 / n_samples - 1;
+            curve[i] = ( 3 + amount ) * x * gain * deg / ( Math.PI + amount * Math.abs(x) );
+        }
+        return curve;
+    };
+
     const master = masterChannel();
 
     function time(s: number) {
@@ -200,6 +212,15 @@ export function Audio(au: AudioContext = new (window.AudioContext || window.webk
         env.start();
         env.offset.value = 0.0;
 
+        const fakeNode = au.createGain();
+        fakeNode.gain.value = 0;
+        const pDist = fakeNode.gain;
+
+        const dist = au.createWaveShaper();
+        let distLevel = pDist.value;
+        dist.curve = makeDistortionCurve(distLevel);
+        dist.oversample = '4x';
+
         function trigger() {
 
         }
@@ -221,8 +242,8 @@ export function Audio(au: AudioContext = new (window.AudioContext || window.webk
 
         osc.connect(vca);
         vca.connect(filter);
-        filter.connect(out);
-
+        filter.connect(dist);
+        dist.connect(out);
 
         function noteOn(note: FullNote, accent: boolean = false, glide: boolean = false) {
             if (accent) {
@@ -237,12 +258,17 @@ export function Audio(au: AudioContext = new (window.AudioContext || window.webk
                 env.offset.exponentialRampToValueAtTime(0.01, au.currentTime + pDecay.value);
             }
             osc.frequency.cancelScheduledValues(au.currentTime);
-            osc.frequency.setTargetAtTime(midiNoteToFrequency(textNoteToNumber(note)),au.currentTime, glide ? 0.02 : 0.002);
+            osc.frequency.setTargetAtTime(midiNoteToFrequency(textNoteToNumber(note)), au.currentTime, glide ? 0.02 : 0.002);
             vca.gain.cancelScheduledValues(au.currentTime);
             vca.gain.setValueAtTime(accent ? 0.2 : 0.15, au.currentTime);
             //vca.gain.setTargetAtTime(accent ? 0.5 : 0.3,au.currentTime, 0.001);
             //vca.gain.setValueAtTime(0.2, au.currentTime);
             vca.gain.linearRampToValueAtTime(0.1, au.currentTime + 0.2);
+            //distAmount.gain.setValueAtTime(pDistAmount.value, au.currentTime);
+            if (pDist.value != distLevel) {
+                distLevel = pDist.value;
+                dist.curve = makeDistortionCurve(distLevel);
+            }
             trigger();
         }
 
@@ -258,7 +284,8 @@ export function Audio(au: AudioContext = new (window.AudioContext || window.webk
                 cutoff: pCutoff,
                 resonance: pResonance,
                 envMod: pEnvMod,
-                decay: pDecay
+                decay: pDecay,
+                distortion: pDist
             }
         }
     }

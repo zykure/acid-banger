@@ -86,16 +86,18 @@ function ThreeOhUnit(audio: AudioT, waveform: OscillatorType, output: AudioNode,
     }
 
     const parameters = {
-        cutoff: parameter("Cutoff", [30,700],400),
-        resonance: parameter("Resonance", [1,30],15),
+        cutoff: parameter("Cutoff", [30,700], 400),
+        resonance: parameter("Resonance", [1,30], 15),
         envMod: parameter("Env Mod", [0,8000], 4000),
-        decay: parameter("Decay", [0.1,0.9], 0.5)
+        decay: parameter("Decay", [0.1,0.9], 0.5),
+        distortion: parameter("Dist", [0,100], 0)
     };
 
     parameters.cutoff.subscribe(v => synth.params.cutoff.value = v);
     parameters.resonance.subscribe(v => synth.params.resonance.value = v);
     parameters.envMod.subscribe(v => synth.params.envMod.value = v);
     parameters.decay.subscribe(v => synth.params.decay.value = v);
+    parameters.distortion.subscribe(v => synth.params.distortion.value = v);
 
     return {
         step,
@@ -106,13 +108,14 @@ function ThreeOhUnit(audio: AudioT, waveform: OscillatorType, output: AudioNode,
 }
 
 async function NineOhUnit(audio: AudioT): Promise<NineOhMachine> {
-    const drums = await audio.SamplerDrumMachine(["909BD.mp3","909OH.mp3","909CH.mp3","909SD.mp3"])
+    const drums = await audio.SamplerDrumMachine(["samples/bd08.mp4","samples/oh01.mp4","samples/hh01.mp4","samples/sd08.mp4","samples/cp02.mp4"])
     const pattern = genericParameter<DrumPattern>("Drum Pattern", []);
     const mutes = [
         genericParameter("Mute BD", false),
         genericParameter("Mute OH", false),
         genericParameter("Mute CH", false),
-        genericParameter("Mute SD", false)
+        genericParameter("Mute SD", false),
+        genericParameter("Mute CP", false)
     ];
     const newPattern = trigger("New Pattern Trigger", true);
     const gen = NineOhGen();
@@ -239,7 +242,8 @@ async function start() {
     const gen = ThreeOhGen();
     const programState: ProgramState = {
         notes: [
-            ThreeOhUnit(audio, "sawtooth", delay.inputNode, gen),ThreeOhUnit(audio, "square", delay.inputNode, gen)
+            ThreeOhUnit(audio, "sawtooth", delay.inputNode, gen),
+            ThreeOhUnit(audio, "square", delay.inputNode, gen)
         ],
         drums: await NineOhUnit(audio),
         gen,
@@ -253,4 +257,4 @@ async function start() {
     document.body.append(ui);
 }
 
-pressToStart(start, "The Endless Acid Banger", "A collaboration between human and algorithm by Vitling");
+pressToStart(start, "The Endless Acid Banger", "A collaboration between human and algorithm by Vitling, spiced up by Zykure");

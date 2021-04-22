@@ -266,25 +266,35 @@ function AudioMeter(analyser: AnalyserNode) {
     const canvas = document.createElement("canvas");
     canvas.style.width = "100%";
     let w = canvas.width = 200;
-    const h = canvas.height = 100;
+    const h = canvas.height = 50;
     const g = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-    const output = new Uint8Array(analyser.fftSize);
+    const fftOutput = new Uint8Array(analyser.fftSize);
+    const freqOutput = new Uint8Array(analyser.frequencyBinCount / 2);
 
     function draw() {
         //w = canvas.width = canvas.clientWidth;
-        analyser.getByteTimeDomainData(output);
+        analyser.getByteTimeDomainData(fftOutput);
+        analyser.getByteFrequencyData(freqOutput);
 
         g.clearRect(0,0,w,h);
+
+        g.fillStyle = "white";
+        for (let i =0 ; i < freqOutput.length; i++) {
+            const v = freqOutput[i] / 256;
+            g.fillStyle = 'rgb(' + (freqOutput[i]/2 + 128) + ',0,0)';
+            g.fillRect(w * i/freqOutput.length, h - 1.0 * v * h, w/freqOutput.length, 1.0 * v * h);
+        }
+
         g.strokeStyle = "white";
         g.beginPath();
         g.moveTo(0,h/2);
-        for (let i =0 ; i < output.length; i++) {
-            const v = (output[i] / 128) - 1;
-            g.lineTo(w * i/output.length, h/2 + (1.5 * v* h/2));
+        for (let i =0 ; i < fftOutput.length; i++) {
+            const v = (fftOutput[i] / 128) - 1;
+            g.lineTo(w * i/fftOutput.length, h/2 + (1.5 * v * h/2));
         }
-
         g.stroke();
+
         window.requestAnimationFrame(draw);
     }
     window.requestAnimationFrame(draw);

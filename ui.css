@@ -13,14 +13,14 @@ body {
 }
 
 #ui {
-    max-width: 1200px;
+    max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
 
 }
 
 p {
-    max-width: 1200px;
+    max-width: 1400px;
     margin-left: auto;
     margin-right:auto;
     font-family: monospace;
@@ -30,7 +30,7 @@ a {
     color:white;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
     p {
         font-size: 0.8em;
     }
@@ -79,7 +79,7 @@ a {
 
 .pattern {
     width:100%;
-    height: 200px;
+    height: 250px;
     /*min-height: 150px;*/
     /*border-right:1px solid rgba(255,255,255,0.3);*/
 }
@@ -154,7 +154,7 @@ button.waiting {
 
 .notegen-note-display {
     width: 200px;
-    height: 50px;
+    height: 60px;
     margin-left: auto;
     margin-right: auto;
     padding:5px;
@@ -189,5 +189,3 @@ h2 {
 /*        font-size: 1.2em;*/
 /*    }*/
 /*}*/
-
-
