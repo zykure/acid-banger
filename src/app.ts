@@ -257,4 +257,4 @@ async function start() {
     document.body.append(ui);
 }
 
-pressToStart(start, "The Endless Acid Banger", "A collaboration between human and algorithm by Vitling, spiced up by Zykure");
+pressToStart(start, "Spicy Endless Acid Banger", "A collaboration between human and algorithm by Vitling, spiced up by Zykure");

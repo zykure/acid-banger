@@ -84,7 +84,7 @@ export function NineOhGen() {
         const kickMode: string = choose(["electro", "fourfloor"]);
         const hatMode: string = choose(["offbeats", "closed", full ? "offbeats" : "none"]);
         const snareMode: string = choose(["backbeat","skip", full ? "backbeat" : "none"]);
-        const clapMode: string = choose(["backbeat", "skip", full ? "backbeat" : "none"]);
+        const clapMode: string = choose(["backbeat", "skip", full ? "offbeats" : "none"]);
 
         if (kickMode == "fourfloor") {
             for (let i = 0; i < 16; i++) {
@@ -127,17 +127,27 @@ export function NineOhGen() {
         if (clapMode == "backbeat") {
             for (let i = 0; i < 16; i++) {
                 if (i % 8 === 4) {
-                    cpPattern[i] = sdPattern[i] ? 0.3 : 0.5;
+                    cpPattern[i] = 0.5;
                 }
             }
         } else if (clapMode == "skip") {
             for (let i = 0; i < 16; i++) {
                 if (i % 8 === 3 || i % 8 === 6) {
+                    cpPattern[i] = 0.6 + Math.random() * 0.4;
+                } else if (i > 0 && cpPattern[i-1] && i % 8 === 4 || i % 8 === 7 && Math.random() < 0.5) {
                     cpPattern[i] = 0.4 + Math.random() * 0.4;
-                } else if (i % 2 === 0 && Math.random() < (sdPattern[i] ? 0.2 : 0.3)) {
-                    cpPattern[i] = 0.2 + Math.random() * 0.2;
+                } else if (i % 2 === 0 && Math.random() < (sdPattern[i] ? 0.2 : 0.4)) {
+                    cpPattern[i] = 0.4 + Math.random() * 0.2;
                 } else if (Math.random() < (sdPattern[i] ? 0.1 : 0.2)) {
-                    cpPattern[i] = 0.1 + Math.random() * 0.2;
+                    cpPattern[i] = 0.2 + Math.random() * 0.2;
+                }
+            }
+        } else if (clapMode == "offbeats") {
+            for (let i = 0; i < 16; i++) {
+                if (i % 4 == 2) {
+                    cpPattern[i] = 0.4 + Math.random() * 0.2;
+                } else if (Math.random() < 0.3) {
+                    cpPattern[i] = 0.2 + Math.random() * 0.2;
                 }
             }
         }
