@@ -1,20 +1,21 @@
 # The Endless Acid Banger
 
-An algorithmic human-computer techno jam
+An algorithmic human-computer techno jam - now even more spicy
 
-![Screenshot](https://github.com/vitling/acid-banger/blob/main/preview.png?raw=true)
+![Screenshot](https://github.com/zykure/acid-banger/blob/main/preview.png?raw=true)
 
 Built in Typescript with the WebAudio API.
 
 Live version running at [www.vitling.xyz/toys/acid-banger](https://www.vitling.xyz/toys/acid-banger)
 
 
-## Support
+## Original text by vitling
+
+### Support
 
 You can support my work by [Sponsoring me on GitHub](https://github.com/sponsors/vitling) or [buying](https://music.vitling.xyz) [my music](https://edgenetwork.bandcamp.com/album/edge001-spaceport-lounge-music)
 
-
-## License & Intended use
+### License & Intended use
 
 This is an art project, not a software tool for music creation. I consider it to be finished, and as such I will likely not be accepting feature requests or feature-driven PRs. Please feel encouraged to fork the project and do something else with it if you would like - I love to see further creative work built on top of it.
 
