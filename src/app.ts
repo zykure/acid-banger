@@ -108,7 +108,7 @@ function ThreeOhUnit(audio: AudioT, waveform: OscillatorType, output: AudioNode,
 }
 
 async function NineOhUnit(audio: AudioT): Promise<NineOhMachine> {
-    const drums = await audio.SamplerDrumMachine(["samples/bd08.mp4","samples/oh01.mp4","samples/hh01.mp4","samples/sd08.mp4","samples/cp02.mp4"])
+    const drums = await audio.SamplerDrumMachine(["samples/bd01.mp4","samples/oh01.mp4","samples/hh01.mp4","samples/sd02.mp4","samples/cp01.mp4"])
     const pattern = genericParameter<DrumPattern>("Drum Pattern", []);
     const mutes = [
         genericParameter("Mute BD", false),
@@ -164,6 +164,7 @@ function AutoPilot(state: ProgramState): AutoPilotUnit {
     const patternEnabled = genericParameter("Alter Patterns", true);
     const dialsEnabled = genericParameter("Twiddle With Knobs", true);
     const mutesEnabled = genericParameter("Mute Drum Parts", true);
+
     state.clock.currentStep.subscribe(step => {
         if (step === 4) {
             nextMeasure.value = nextMeasure.value + 1;
@@ -176,16 +177,19 @@ function AutoPilot(state: ProgramState): AutoPilotUnit {
         if (patternEnabled.value) {
             if (measure % 64 === 0) {
                 if (Math.random() < 0.2) {
+                    console.log("measure #%d: will generate new notes", measure)
                     state.gen.newNotes.value = true;
                 }
             }
             if (measure % 16 === 0) {
                 state.notes.forEach((n, i) => {
                     if (Math.random() < 0.5) {
+                        console.log("measure #%d: will generate new pattern for unit %d", measure, i)
                         n.newPattern.value = true;
                     }
                 });
                 if (Math.random() < 0.3) {
+                    console.log("measure #%d: will generate new pattern for drums", measure)
                     state.drums.newPattern.value = true;
                 }
             }
@@ -194,12 +198,28 @@ function AutoPilot(state: ProgramState): AutoPilotUnit {
 
     currentMeasure.subscribe(measure => {
         if (mutesEnabled.value) {
-            if (measure % 8 == 0) {
-                const drumMutes = [Math.random() < 0.2, Math.random() < 0.5, Math.random() < 0.5, Math.random() < 0.5];
-                state.drums.mutes[0].value = drumMutes[0];
-                state.drums.mutes[1].value = drumMutes[1];
-                state.drums.mutes[2].value = drumMutes[2];
-                state.drums.mutes[3].value = drumMutes[3];
+            const drumMutes = [Math.random() < 0.2, Math.random() < 0.5, Math.random() < 0.5, Math.random() < 0.5, Math.random() < 0.8];
+            if (drumMutes.filter(Boolean).length == drumMutes.length) {
+                console.log("measure #%d: not muting any drums", measure)
+            } else if (measure % 8 === 0) {
+                console.log("measure #%d: may mute drum parts", measure)
+                state.drums.mutes.forEach((m, i) => {
+                    m.value = drumMutes[i];
+                });
+            } else if (measure % 8 === 7) {
+                console.log("measure #%d: may mute drum parts", measure)
+                state.drums.mutes.forEach((m, i) => {
+                    if (Math.random() < 0.5) {
+                        m.value ||= drumMutes[i];
+                    }
+                });
+            } else if (measure % 4 === 0) {
+                console.log("measure #%d: may unmute drum parts", measure)
+                state.drums.mutes.forEach((m, i) => {
+                    if (Math.random() < 0.5) {
+                        m.value &&= drumMutes[i];
+                    }
+                });
             }
         }
     })
@@ -208,7 +228,6 @@ function AutoPilot(state: ProgramState): AutoPilotUnit {
 
     const wanderers = [...noteParams, ...delayParams].map(param => WanderingParameter(param));
     window.setInterval(() => { if (dialsEnabled.value) wanderers.forEach(w => w.step());},100);
-
 
     return {
         switches: [
@@ -223,10 +242,12 @@ function ClockUnit(): ClockUnit {
     const bpm = parameter("BPM", [70,200],142);
     const currentStep = parameter("Current Step", [0,15],0);
     const clockImpl = Clock(bpm.value, 4, 0.0);
+
     bpm.subscribe(clockImpl.setBpm);
     clockImpl.bind((time, step) => {
         currentStep.value = step % 16;
     })
+
     return {
         bpm,
         currentStep

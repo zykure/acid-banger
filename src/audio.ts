@@ -176,18 +176,22 @@ export function Audio(au: AudioContext = new (window.AudioContext || window.webk
     function DelayInsert(time: number, feedback: number, wet: number, destination: AudioNode = master.in) {
         const delayNode = au.createDelay(1);
         delayNode.delayTime.value = time;
+
         const feedbackGain = au.createGain();
         feedbackGain.gain.value = feedback;
         delayNode.connect(feedbackGain);
         feedbackGain.connect(delayNode);
+
         const delayGain = au.createGain();
         delayGain.gain.value = wet;
         delayNode.connect(delayGain);
         delayGain.connect(destination);
+
         const synthOut = au.createGain();
         synthOut.gain.value = 1.0;
         synthOut.connect(delayNode);
         synthOut.connect(destination);
+
         return {
             in: synthOut,
             feedback: feedbackGain.gain,
