@@ -159,7 +159,7 @@ function DelayUnit(audio: AudioT): DelayUnit  {
 }
 
 function AutoPilot(state: ProgramState): AutoPilotUnit {
-    const nextMeasure = parameter("upcomingMeasure", [0, Infinity],0);
+    const nextMeasure = parameter("upcomingMeasure", [0, Infinity], 0);
     const currentMeasure = parameter("measure", [0, Infinity], 0);
     const patternEnabled = genericParameter("Alter Patterns", true);
     const dialsEnabled = genericParameter("Twiddle With Knobs", true);
@@ -199,12 +199,13 @@ function AutoPilot(state: ProgramState): AutoPilotUnit {
                     lastDrumChange = measure;
                 }
             } else if (measure % 16 === 4) {
-                state.notes.forEach((n, i) => {
+                state.notes.every((n, i) => {
                     const age = measure - lastNoteChange[i];
                     if (age >= 20 && Math.random() < 0.5) {
                         console.log("measure #%d: will generate new pattern for unit %d (age %d)", measure, i, age);
                         n.newPattern.value = true;
                         lastNoteChange[i] = measure;
+                        return;
                     }
                 });
             }
@@ -229,10 +230,10 @@ function AutoPilot(state: ProgramState): AutoPilotUnit {
                         m.value ||= drumMutes[i];
                     }
                 });
-            } else if (measure % 4 === 0) {
+            } else if (measure % 4 === 0 && mutedTracks > 2) {
                 console.log("measure #%d: may unmute drum parts (%d muted)", measure, mutedTracks);
                 state.drums.mutes.forEach((m, i) => {
-                    if (Math.random() < 1. / mutedTracks) {
+                    if (Math.random() < 0.5) {
                         m.value &&= drumMutes[i];
                     }
                 });
