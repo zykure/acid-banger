@@ -165,6 +165,9 @@ function AutoPilot(state: ProgramState): AutoPilotUnit {
     const dialsEnabled = genericParameter("Twiddle With Knobs", true);
     const mutesEnabled = genericParameter("Mute Drum Parts", true);
 
+    var lastDrumChange = 0;
+    var lastNoteChange = [0,0];
+
     state.clock.currentStep.subscribe(step => {
         if (step === 4) {
             nextMeasure.value = nextMeasure.value + 1;
@@ -177,46 +180,59 @@ function AutoPilot(state: ProgramState): AutoPilotUnit {
         if (patternEnabled.value) {
             if (measure % 64 === 0) {
                 if (Math.random() < 0.2) {
-                    console.log("measure #%d: will generate new notes", measure)
+                    console.log("measure #%d: will generate new notes", measure);
                     state.gen.newNotes.value = true;
+                    lastNoteChange[0] = lastNoteChange[1] = measure;
                 }
             }
             if (measure % 16 === 0) {
                 state.notes.forEach((n, i) => {
                     if (Math.random() < 0.5) {
-                        console.log("measure #%d: will generate new pattern for unit %d", measure, i)
+                        console.log("measure #%d: will generate new pattern for unit %d", measure, i);
                         n.newPattern.value = true;
+                        lastNoteChange[i] = measure;
                     }
                 });
                 if (Math.random() < 0.3) {
-                    console.log("measure #%d: will generate new pattern for drums", measure)
+                    console.log("measure #%d: will generate new pattern for drums", measure);
                     state.drums.newPattern.value = true;
+                    lastDrumChange = measure;
                 }
+            } else if (measure % 16 === 4) {
+                state.notes.forEach((n, i) => {
+                    const age = measure - lastNoteChange[i];
+                    if (age >= 20 && Math.random() < 0.5) {
+                        console.log("measure #%d: will generate new pattern for unit %d (age %d)", measure, i, age);
+                        n.newPattern.value = true;
+                        lastNoteChange[i] = measure;
+                    }
+                });
             }
         }
     })
 
     currentMeasure.subscribe(measure => {
         if (mutesEnabled.value) {
+            const mutedTracks = state.drums.mutes.filter(Boolean).length;
             const drumMutes = [Math.random() < 0.2, Math.random() < 0.5, Math.random() < 0.5, Math.random() < 0.5, Math.random() < 0.8];
             if (drumMutes.filter(Boolean).length == drumMutes.length) {
-                console.log("measure #%d: not muting any drums", measure)
+                //console.log("measure #%d: not muting all drums simultaneously", measure);
             } else if (measure % 8 === 0) {
-                console.log("measure #%d: may mute drum parts", measure)
+                console.log("measure #%d: may mute drum parts", measure);
                 state.drums.mutes.forEach((m, i) => {
                     m.value = drumMutes[i];
                 });
             } else if (measure % 8 === 7) {
-                console.log("measure #%d: may mute drum parts", measure)
+                console.log("measure #%d: may mute drum parts", measure);
                 state.drums.mutes.forEach((m, i) => {
                     if (Math.random() < 0.5) {
                         m.value ||= drumMutes[i];
                     }
                 });
             } else if (measure % 4 === 0) {
-                console.log("measure #%d: may unmute drum parts", measure)
+                console.log("measure #%d: may unmute drum parts (%d muted)", measure, mutedTracks);
                 state.drums.mutes.forEach((m, i) => {
-                    if (Math.random() < 0.5) {
+                    if (Math.random() < 1. / mutedTracks) {
                         m.value &&= drumMutes[i];
                     }
                 });
