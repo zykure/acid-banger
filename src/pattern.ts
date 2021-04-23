@@ -152,9 +152,9 @@ export function NineOhGen() {
                     ohPattern[i] = 0.4;
                 } else if (Math.random() < 0.3) {
                     if (Math.random() < 0.5) {
-                        chPattern[i] = Math.random() * 0.2;
+                        chPattern[i] = 0.2 + Math.random() * 0.2;
                     } else {
-                        ohPattern[i] = Math.random() * 0.2;
+                        ohPattern[i] = 0.1 + Math.random() * 0.2;
                     }
                 }
 
@@ -164,7 +164,7 @@ export function NineOhGen() {
                 if (i % 2 === 0) {
                     chPattern[i] = 0.4;
                 } else if (Math.random() < 0.5) {
-                    chPattern[i] = Math.random() * 0.3;
+                    chPattern[i] = 0.2 + Math.random() * 0.3;
                 }
 
             }

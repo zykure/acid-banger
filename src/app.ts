@@ -90,7 +90,7 @@ function ThreeOhUnit(audio: AudioT, waveform: OscillatorType, output: AudioNode,
         resonance: parameter("Resonance", [1,30], 15),
         envMod: parameter("Env Mod", [0,8000], 4000),
         decay: parameter("Decay", [0.1,0.9], 0.5),
-        distortion: parameter("Dist", [0,100], 0)
+        distortion: parameter("Dist", [0,80], 0)
     };
 
     parameters.cutoff.subscribe(v => synth.params.cutoff.value = v);
