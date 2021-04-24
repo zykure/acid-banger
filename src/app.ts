@@ -214,11 +214,8 @@ function AutoPilot(state: ProgramState): AutoPilotUnit {
 
     currentMeasure.subscribe(measure => {
         if (mutesEnabled.value) {
-            const mutedTracks = state.drums.mutes.filter(Boolean).length;
             const drumMutes = [Math.random() < 0.2, Math.random() < 0.5, Math.random() < 0.5, Math.random() < 0.5, Math.random() < 0.8];
-            if (drumMutes.filter(Boolean).length == drumMutes.length) {
-                //console.log("measure #%d: not muting all drums simultaneously", measure);
-            } else if (measure % 8 === 0) {
+            if (measure % 8 === 0) {
                 console.log("measure #%d: may mute drum parts", measure);
                 state.drums.mutes.forEach((m, i) => {
                     m.value = drumMutes[i];
@@ -230,8 +227,8 @@ function AutoPilot(state: ProgramState): AutoPilotUnit {
                         m.value ||= drumMutes[i];
                     }
                 });
-            } else if (measure % 4 === 0 && mutedTracks > 2) {
-                console.log("measure #%d: may unmute drum parts (%d muted)", measure, mutedTracks);
+            } else if (measure % 4 === 0) {
+                console.log("measure #%d: may unmute drum parts", measure);
                 state.drums.mutes.forEach((m, i) => {
                     if (Math.random() < 0.5) {
                         m.value &&= drumMutes[i];
