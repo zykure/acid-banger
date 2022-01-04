@@ -163,8 +163,6 @@ export function Audio(au: AudioContext = new (window.AudioContext || window.webk
     }
 
     function SimpleToneSynth(attack: number, sustain: number, release:number, destination: AudioNode = master.in) {
-
-
         function play(note: FullNote) {
             tone(pitch(note), attack, sustain, release, biRnd(), destination);
         }

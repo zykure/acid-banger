@@ -39,6 +39,13 @@ export type ThreeOhMachine = {
         resonance: NumericParameter,
         envMod: NumericParameter,
         decay: NumericParameter
+    },
+    midiDevice: NumericParameter,
+    midiControls: {
+        cutoff: NumericParameter,
+        resonance: NumericParameter,
+        envMod: NumericParameter,
+        decay: NumericParameter
     }
 }
 
@@ -67,6 +74,10 @@ export type DelayUnit = {
 export type ClockUnit = {
     currentStep: NumericParameter,
     bpm: NumericParameter
+}
+
+export type MidiUnit = {
+    noteLength: NumericParameter,
 }
 
 export type AutoPilotUnit = {
@@ -106,6 +117,6 @@ export type ProgramState = {
     notes: ThreeOhMachine[],
     drums: NineOhMachine,
     gen: NoteGenerator,
-    delay: DelayUnit
+    delay: DelayUnit,
     clock: ClockUnit
 }

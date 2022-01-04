@@ -84,16 +84,17 @@ a {
     /*border-right:1px solid rgba(255,255,255,0.3);*/
 }
 
-button {
+button, select, input {
     color:white;
     background-color: #111;
     border: 1px solid #444;
     text-align: center;
     cursor: pointer;
-    font-family: Orbitron, monospace
+    font-family: Orbitron, monospace;
+    display: inline;
 }
 
-button:hover {
+button:hover, select:hover, input:hover {
     background-color: #222;
 }
 
@@ -113,6 +114,23 @@ button:hover {
     font-size:20px;
     padding:0;
     text-align: center;
+}
+
+.option-list {
+    text-align: center;
+}
+
+.midi-controls {
+    margin-left: 150px;
+    padding: 5px 0px;
+}
+
+.midi-controls * {
+    margin-left: 25px;
+}
+
+.params.horizontal {
+    white-space: nowrap;
 }
 
 .params.horizontal .dial {
