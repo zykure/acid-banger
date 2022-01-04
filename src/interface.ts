@@ -42,6 +42,7 @@ export type ThreeOhMachine = {
     },
     midiDevice: NumericParameter,
     midiControls: {
+        offset: NumericParameter,
         cutoff: NumericParameter,
         resonance: NumericParameter,
         envMod: NumericParameter,

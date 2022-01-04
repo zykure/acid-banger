@@ -69,6 +69,25 @@ function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, outpu
     const pattern = genericParameter<Pattern>("Pattern", []);
     const newPattern = trigger("New Pattern Trigger", true);
 
+    const parameters = {
+        cutoff: parameter("Cutoff", [30,700], 400),
+        resonance: parameter("Resonance", [1,30], 15),
+        envMod: parameter("Env Mod", [0,8000], 4000),
+        decay: parameter("Decay", [0.1,0.9], 0.5),
+        distortion: parameter("Dist", [0,80], 0)
+    };
+
+    const midiControls = {
+        offset: parameter("Pitch Offset", [-48, 48], 0),
+        cutoff: parameter("Cutoff CC", [-1,127], 0),
+        resonance: parameter("Resonance CC", [-1,127], 0),
+        envMod: parameter("Env Mod CC", [-1,127], 0),
+        decay: parameter("Decay CC", [-1,127], 0),
+        distortion: parameter("Dist CC", [-1,127], 0)
+    }
+
+    var midiOutput = midi ? midi.OutputDevice(midiDevice.value) : null;
+
     gen.newNotes.subscribe(newNotes => {
         if (newNotes == true) newPattern.value = true;
     })
@@ -82,28 +101,13 @@ function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, outpu
         const slot = pattern.value[index % patternLength];
         if (slot.note != "-") {
             synth.noteOn(slot.note, slot.accent, slot.glide);
-            if (midi)
-                midi.OutputDevice(midiDevice.value).noteOn(slot.note, slot.accent, slot.glide);
+            if (midiOutput)
+                midiOutput.noteOn(slot.note, slot.accent, slot.glide, midiControls.offset.value);
         } else {
             synth.noteOff();
-            //midiDevice.noteOff();
+            //if (midiOutput)
+            //    midiOutput.noteOff();
         }
-    }
-
-    const parameters = {
-        cutoff: parameter("Cutoff", [30,700], 400),
-        resonance: parameter("Resonance", [1,30], 15),
-        envMod: parameter("Env Mod", [0,8000], 4000),
-        decay: parameter("Decay", [0.1,0.9], 0.5),
-        distortion: parameter("Dist", [0,80], 0)
-    };
-
-    const midiControls = {
-        cutoff: parameter("Cutoff CC", [-1,127], 0),
-        resonance: parameter("Resonance CC", [-1,127], 0),
-        envMod: parameter("Env Mod CC", [-1,127], 0),
-        decay: parameter("Decay CC", [-1,127], 0),
-        distortion: parameter("Dist CC", [-1,127], 0)
     }
 
     parameters.cutoff.subscribe(v => synth.params.cutoff.value = v);
@@ -116,20 +120,30 @@ function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, outpu
         midiDevice.subscribe(d => {
             var output = midi.getOutput(d);
             console.log("MIDI output device: " + output.manufacturer + " " + output.name);
-            /// Control Values for Korg Minilogue XD
-            midiControls.cutoff.value = 43;
-            midiControls.resonance.value = 44;
-            midiControls.envMod.value = 18;
-            midiControls.decay.value = 17;
+            midiOutput = midi.OutputDevice(midiDevice.value);
+            midiControls.offset.value = 0;
+            midiControls.cutoff.value = -1;
+            midiControls.resonance.value = -1;
+            midiControls.envMod.value = -1;
+            midiControls.decay.value = -1;
             midiControls.distortion.value = -1;
+            if (output.manufacturer.startsWith('KORG')) {
+                if (output.name.startsWith('minilogue xd')) {
+                    /// Control Values for Korg Minilogue XD
+                    midiControls.cutoff.value = 43;
+                    midiControls.resonance.value = 44;
+                    midiControls.envMod.value = 22;
+                    midiControls.decay.value = 17;
+                    midiControls.distortion.value = -1;
+                }
+            }
             /// TODO: add definitions based on MIDI Manufacturer/Name
         });
 
         function sendMidiControl(midi: MidiT, device: NumericParameter, param: NumericParameter, control: NumericParameter) {
             var v = Math.trunc((param.value - param.bounds[0]) / (param.bounds[1] - param.bounds[0]) * 127);  // convert to MIDI range
-            if (control.value >= 0) {
-                var output = midi.OutputDevice(device.value);
-                output.controlChange(control.value, v);
+            if (midiOutput && control.value >= 0) {
+                midiOutput.controlChange(control.value, v);
             }
         }
 

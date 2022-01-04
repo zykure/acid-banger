@@ -6,7 +6,7 @@
 
 import {FullNote, textNoteToNumber} from "./audio.js";
 
-export function Midi(midiAccess: any, noteLength: number = 0.5) {
+export function Midi(midiAccess: any, noteLength: number = 100) {
     function listInputsAndOutputs() {
         for (var entry of midiAccess.inputs) {
             var input = entry[1];
@@ -38,29 +38,34 @@ export function Midi(midiAccess: any, noteLength: number = 0.5) {
     }
 
     function OutputDevice(portID: string | number) {
-        function noteOn(note: FullNote | number, accent: boolean = false, glide: boolean = false) {
+        function noteOn(note: FullNote | number, accent: boolean = false, glide: boolean = false, offset: number = 0) {
             var midiNote = typeof(note) === 'number' ? note : textNoteToNumber(note);
+            midiNote += offset;
             var midiLength = glide ? noteLength : noteLength / 2;
-            var noteOnMessage = [0x90, midiNote, accent ? 0x7f : 0x40];
+            var noteOnMessage = [0x90, midiNote, accent ? 0x7f : 0x5f];
             var noteOffMessage = [0x80, midiNote, 0x40];
             var output = getOutput(portID);
+
+            // TODO: fix note length
+
             console.log("Sending MIDI message: ", noteOnMessage, noteOffMessage)
             output.send( noteOnMessage );
-            output.send( noteOffMessage, window.performance.now() + midiLength );
+            //output.send( noteOffMessage, window.performance.now() + midiLength );
         }
 
-        function noteOff(note: FullNote | number) {
+        function noteOff(note: FullNote | number, offset: number = 0) {
             var midiNote = typeof(note) === 'number' ? note : textNoteToNumber(note);
+            midiNote += offset;
             var noteOffMessage = [0x80, midiNote, 0x40];
             var output = getOutput(portID);
-            console.log("Sending MIDI message: ", noteOffMessage)
+            //console.log("Sending MIDI message: ", noteOffMessage)
             output.send( noteOffMessage );
         }
 
         function controlChange(control: number, value: number) {
             var controlChangeMessage = [0xB0, control, value];
             var output = getOutput(portID);
-            console.log("Sending MIDI message: ", controlChangeMessage)
+            //console.log("Sending MIDI message: ", controlChangeMessage)
             output.send( controlChangeMessage );
         }
 

@@ -60,6 +60,8 @@ function MidiControls(midiDevice: NumericParameter, deviceNames: string[], param
     const list = optionList(midiDevice, deviceNames);
     container.append(list);
 
+    // TODO: add labels
+
     params.forEach(param => {
         const inp = document.createElement("input");
         inp.classList.add("number-input");
