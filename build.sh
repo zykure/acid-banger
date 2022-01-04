@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+if [ ! -d node_modules ]; then
+    npm install @types/webmidi && npm audit fix --force
+fi
+
 tsc -p . || exit $?
 mkdir -p ./dist || exit $?
 webpack ./js/app.js -o ./dist/ --mode production || exit $?
