@@ -162,6 +162,12 @@ export function RangeSelect(initial: number, bounds: [number, number], text?: st
         state.handler.push(h);
     }
 
+    element.addEventListener("change", (e) => {
+        const actualValue = +element.value;
+        setValue(actualValue);
+        state.handler.forEach(h => h(actualValue));
+    });
+
     element.addEventListener("dblclick", (e) => {
         const actualValue = initial;
         setValue(actualValue);
