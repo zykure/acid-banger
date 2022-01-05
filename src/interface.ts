@@ -53,8 +53,10 @@ export type ThreeOhMachine = {
 export type NineOhMachine = {
     pattern: GeneralisedParameter<DrumPattern>,
     newPattern: Trigger,
-    mutes: GeneralisedParameter<boolean>[],
     step: (step: number) => void
+    mutes: GeneralisedParameter<boolean>[],
+    midiDevice: NumericParameter,
+    midiNotes: NumericParameter[],
 }
 
 export type NoteGenerator = {

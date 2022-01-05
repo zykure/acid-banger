@@ -13,6 +13,7 @@ import {
     ThreeOhMachine, Trigger, AutoPilotUnit
 } from "./interface.js";
 import {textNoteToNumber} from "./audio.js";
+import {MidiT} from "./midi.js";
 import {Dial} from "./dial.js";
 
 const defaultColors = {
@@ -57,23 +58,20 @@ function MidiControls(midiDevice: NumericParameter, deviceNames: string[], param
     const container = document.createElement("div");
     container.classList.add("midi-controls", "params", ...classes);
 
+    const label = document.createElement("span");
+    container.append(document.createTextNode("MIDI Device:"));
+
     const list = optionList(midiDevice, deviceNames);
     container.append(list);
 
-    // TODO: add labels
-
     params.forEach(param => {
-        const inp = document.createElement("input");
-        inp.classList.add("number-input");
-        inp.type = "number";
-        inp.value = "-1";
-        inp.min = "-1";
-        inp.max = "127";
-        inp.step = "1";
+        const label = document.createElement("span");
+        label.classList.add("param-name");
+        label.append(document.createTextNode(param.name + ":"));
 
-        param.subscribe(v => inp.value = param.value.toString());
-        inp.addEventListener("change", () => param.value = +inp.value);
+        const inp = numberInput(param);
 
+        container.append(label);
         container.append(inp);
     })
 
@@ -128,6 +126,20 @@ function optionList(param: NumericParameter, options: string[]) {
     }
 
     return sel;
+}
+
+function numberInput(param: NumericParameter) {
+    const inp = document.createElement("input");
+    inp.classList.add("number-input");
+    inp.type = "number";
+    inp.value = param.value.toString();
+    inp.min = param.bounds[0].toString();
+    inp.max =param.bounds[1].toString();
+
+    param.subscribe(v => inp.value = param.value.toString());
+    inp.addEventListener("change", () => param.value = +inp.value);
+
+    return inp;
 }
 
 function label(text: string) {
@@ -351,7 +363,7 @@ function AudioMeter(analyser: AnalyserNode) {
 }
 
 
-export function UI(state: ProgramState, autoPilot: AutoPilotUnit, analyser: AnalyserNode, midiDevices: string[]) {
+export function UI(state: ProgramState, autoPilot: AutoPilotUnit, analyser: AnalyserNode, midi: MidiT) {
     const ui = document.createElement("div");
     ui.id = "ui";
 
@@ -363,10 +375,10 @@ export function UI(state: ProgramState, autoPilot: AutoPilotUnit, analyser: Anal
         controlGroup(label("Meter"), group(AudioMeter(analyser)), "meter")
     )
 
-
-
     const machineContainer = document.createElement("div");
     machineContainer.classList.add("machines");
+
+    const emptyElement = document.createElement("div");
 
     const noteMachines = state.notes.map((n, i) => machine(
         label("303-0" + (i+1)),
@@ -374,7 +386,7 @@ export function UI(state: ProgramState, autoPilot: AutoPilotUnit, analyser: Anal
             triggerButton(n.newPattern),
             PatternDisplay(n.pattern, state.clock.currentStep),
             DialSet(n.parameters),
-            MidiControls(n.midiDevice, midiDevices, n.midiControls, "horizontal")
+            midi ? MidiControls(n.midiDevice, midi.getOutputNames(), n.midiControls, "horizontal") : emptyElement,
         )
     ));
 
@@ -383,7 +395,8 @@ export function UI(state: ProgramState, autoPilot: AutoPilotUnit, analyser: Anal
         group(
             triggerButton(state.drums.newPattern),
             DrumDisplay(state.drums.pattern, state.drums.mutes, state.clock.currentStep),
-            Mutes(state.drums.mutes)
+            Mutes(state.drums.mutes),
+            midi ? MidiControls(state.drums.midiDevice, midi.getOutputNames(), state.drums.midiNotes, "horizontal") : emptyElement,
         )
     )
 
