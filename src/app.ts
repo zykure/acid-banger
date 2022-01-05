@@ -21,6 +21,29 @@ import {
     AutoPilotUnit
 } from "./interface.js";
 
+
+const midiControlPresets = new Map([
+    ["KORG INC. minilogue xd", {
+        // Values taken from the minilogue xd Owner's Manual, Version 1.00, page 61
+        offset: 0,  // offset
+        cutoff: 43,  // Cutoff -> Cutoff
+        resonance:     44,  // Resonance -> Resonance
+        envMod: 22,  // EnvMod -> EG Int
+        decay: 17,  // Decay -> Amp Decay
+        distortion: -1,  // Distortion -> N/A
+    }],
+]);
+
+
+// Drum MIDI notes relative to middle c (C4 = 60)
+const midiDrumNotes = [
+    -12,  // BD
+     -2,  // OH
+     -4,  // CH
+    -10,  // SD
+     -9,  // CP
+]
+
 function WanderingParameter(param: NumericParameter, scaleFactor = 1/400) {
     const [min,max] = param.bounds;
 
@@ -115,27 +138,34 @@ function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, outpu
 
     if (midi) {
         midiDevice.subscribe(d => {
-            midiControls.offset.value = 0;
-            midiControls.cutoff.value = -1;
-            midiControls.resonance.value = -1;
-            midiControls.envMod.value = -1;
-            midiControls.decay.value = -1;
-            midiControls.distortion.value = -1;
-
             var output = midi.getOutput(d);
             if (output) {
-                console.log("MIDI output device: " + output.manufacturer + " " + output.name);
-                if (output.manufacturer.startsWith('KORG')) {
-                    if (output.name.startsWith('minilogue xd')) {
-                        /// Control Values for Korg Minilogue XD
-                        midiControls.cutoff.value = 43;
-                        midiControls.resonance.value = 44;
-                        midiControls.envMod.value = 22;
-                        midiControls.decay.value = 17;
-                        midiControls.distortion.value = -1;
+                var deviceName = output.manufacturer + " " + output.name;
+                console.log("MIDI output device: " + deviceName);
+
+                var hasPreset = false;
+                midiControlPresets.forEach((preset, key) => {
+                    if (deviceName.startsWith(key)) {
+                        console.log("Loading MIDI control preset for: " + key);
+                        midiControls.offset.value = preset.offset;
+                        midiControls.cutoff.value = preset.cutoff;
+                        midiControls.resonance.value = preset.resonance;
+                        midiControls.envMod.value = preset.envMod;
+                        midiControls.decay.value = preset.decay;
+                        midiControls.distortion.value = preset.distortion;
+                        hasPreset = true;
                     }
+                })
+
+                if (! hasPreset) {
+                    console.log("Setting MIDI controls to default values");
+                    midiControls.offset.value = 0;
+                    midiControls.cutoff.value = -1;
+                    midiControls.resonance.value = -1;
+                    midiControls.envMod.value = -1;
+                    midiControls.decay.value = -1;
+                    midiControls.distortion.value = -1;
                 }
-                /// TODO: add definitions based on MIDI Manufacturer/Name
             }
         });
 
@@ -177,11 +207,11 @@ async function NineOhUnit(audio: AudioT, midi: MidiT): Promise<NineOhMachine> {
 
     const middleC = 60;
     const midiNotes = [
-        parameter("BD Note#", [0, 80], middleC-12),
-        parameter("OH Note#", [0, 80], middleC-2),
-        parameter("CH Note#", [0, 80], middleC-4),
-        parameter("SD Note#", [0, 80], middleC-10),
-        parameter("CP Note#", [0, 80], middleC-9)
+        parameter("BD Note#", [-48,48], midiDrumNotes[0]),
+        parameter("OH Note#", [-48,48], midiDrumNotes[1]),
+        parameter("CH Note#", [-48,48], midiDrumNotes[2]),
+        parameter("SD Note#", [-48,48], midiDrumNotes[3]),
+        parameter("CP Note#", [-48,48], midiDrumNotes[4])
     ]
 
     const newPattern = trigger("New Pattern Trigger", true);
@@ -197,7 +227,8 @@ async function NineOhUnit(audio: AudioT, midi: MidiT): Promise<NineOhMachine> {
             if (entry && !mutes[i].value) {
                 drums.triggers[i].play(entry);
                 if (midi) {
-                    midi.OutputDevice(midiDevice.value).noteOn(midiNotes[i].value, false, false);
+                    var note = midiNotes[i].value + middleC;
+                    midi.OutputDevice(midiDevice.value).noteOn(note, false, false);
                 }
             }
         }
@@ -312,7 +343,7 @@ function AutoPilot(state: ProgramState): AutoPilotUnit {
             } else if (measure % 2 === 0) {
                 console.log("measure #%d: may unmute drum parts", measure);
                 state.drums.mutes.forEach((m, i) => {
-                    if (Math.random() < 0.5 || numActive < 2) {
+                    if (Math.random() < 1. / (numActive+1)) {
                         m.value &&= drumMutes[i];
                     }
                 });
