@@ -85,7 +85,7 @@ function WanderingParameter(param: NumericParameter, scaleFactor = 1/400) {
     }
 }
 
-function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, output: AudioNode, gen: NoteGenerator, patternLength: number=16): ThreeOhMachine {
+function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, output: AudioNode, bpm: NumericParameter, gen: NoteGenerator, patternLength: number=16): ThreeOhMachine {
     const synth = audio.ThreeOh(waveform, output);
     const midiDevice = parameter("MIDI Device", [0, Infinity], 0);
     const pattern = genericParameter<Pattern>("Pattern", []);
@@ -100,12 +100,12 @@ function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, outpu
     };
 
     const midiControls = {
-        offset: parameter("Pitch Offset", [-48, 48], 0),
-        cutoff: parameter("Cutoff CC", [-1,127], 0),
-        resonance: parameter("Resonance CC", [-1,127], 0),
-        envMod: parameter("Env Mod CC", [-1,127], 0),
-        decay: parameter("Decay CC", [-1,127], 0),
-        distortion: parameter("Dist CC", [-1,127], 0)
+        offset: parameter("Pitch", [-48, 48], 0),
+        cutoff: parameter("Cutoff CC", [-1,127], -1),
+        resonance: parameter("Resonance CC", [-1,127], -1),
+        envMod: parameter("Env Mod CC", [-1,127], -1),
+        decay: parameter("Decay CC", [-1,127], -1),
+        distortion: parameter("Dist CC", [-1,127], -1)
     }
 
     gen.newNotes.subscribe(newNotes => {
@@ -116,6 +116,12 @@ function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, outpu
         if ((index === 0 && newPattern.value == true) || pattern.value.length == 0) {
             pattern.value = gen.createPattern();
             newPattern.value = false;
+        }
+
+        if (midi) {
+            // send 6 clock pulses per 4 steps (24 per quarter note)
+            for (let i = 0; i < 6; i++)
+                window.setTimeout(() => { midi.OutputDevice(midiDevice.value).clockPulse(); }, (60000/bpm.value)*(i/6));
         }
 
         const slot = pattern.value[index % patternLength];
@@ -207,11 +213,11 @@ async function NineOhUnit(audio: AudioT, midi: MidiT): Promise<NineOhMachine> {
 
     const middleC = 60;
     const midiNotes = [
-        parameter("BD Note#", [-48,48], midiDrumNotes[0]),
-        parameter("OH Note#", [-48,48], midiDrumNotes[1]),
-        parameter("CH Note#", [-48,48], midiDrumNotes[2]),
-        parameter("SD Note#", [-48,48], midiDrumNotes[3]),
-        parameter("CP Note#", [-48,48], midiDrumNotes[4])
+        parameter("BD Pitch", [-48,48], midiDrumNotes[0]),
+        parameter("OH Pitch", [-48,48], midiDrumNotes[1]),
+        parameter("CH Pitch", [-48,48], midiDrumNotes[2]),
+        parameter("SD Pitch", [-48,48], midiDrumNotes[3]),
+        parameter("CP Pitch", [-48,48], midiDrumNotes[4])
     ]
 
     const newPattern = trigger("New Pattern Trigger", true);
@@ -395,8 +401,8 @@ async function start() {
     const gen = ThreeOhGen();
     const programState: ProgramState = {
         notes: [
-            ThreeOhUnit(audio, midi, "sawtooth", delay.inputNode, gen),
-            ThreeOhUnit(audio, midi, "square", delay.inputNode, gen)
+            ThreeOhUnit(audio, midi, "sawtooth", delay.inputNode, clock.bpm, gen),
+            ThreeOhUnit(audio, midi, "square", delay.inputNode, clock.bpm, gen)
         ],
         drums: await NineOhUnit(audio, midi),
         gen,

@@ -82,10 +82,20 @@ export function Midi(midiAccess: any, noteLength: number = 100) {
             }
         }
 
+        function clockPulse() {
+            var clockMessage = [0xF8];
+            var output = getOutput(portID);
+            if (output) {
+                //console.log("Sending MIDI message: ", clockMessage)
+                output.send([0xF8]);
+            }
+        }
+
         return {
             noteOn,
             noteOff,
-            controlChange
+            controlChange,
+            clockPulse
         }
     }
 
