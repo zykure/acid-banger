@@ -8,7 +8,7 @@ function clamp(n: number): number {
     return n < 0 ? 0 : n > 1 ? 1 : n;
 }
 
-export function Dial(bounds: [number, number], text?: string, dialColor: string = "red", textColor: string="white"){
+export function Dial(initial: number, bounds: [number, number], text?: string, dialColor: string = "red", textColor: string="white"){
     const element = document.createElement("canvas");
     element.classList.add("dial");
     const w = element.width = 70;
@@ -91,6 +91,12 @@ export function Dial(bounds: [number, number], text?: string, dialColor: string 
         state.handler.push(h);
     }
 
+    element.addEventListener("dblclick", (e) => {
+        const actualValue = initial;
+        setValue(actualValue);
+        state.handler.forEach(h => h(actualValue));
+    });
+
     element.addEventListener("mousedown", (e) => {
         state.isDragging = true;
     });
@@ -120,3 +126,72 @@ export function Dial(bounds: [number, number], text?: string, dialColor: string 
     };
 }
 export type DialT = ReturnType<typeof Dial>
+
+export function RangeSelect(initial: number, bounds: [number, number], text?: string){
+    const element = document.createElement("input");
+    element.classList.add("range");
+    let normalizedValue = 0.5;
+    let previousNormalisedValue = 0.5;
+    element.type = "number";
+    element.value = getValue().toString();
+    element.min = bounds[0].toString();
+    element.max = bounds[1].toString();
+
+    function normalise(v: number) {
+        return (v - bounds[0]) / (bounds[1] - bounds[0]);
+    }
+
+    function denormalise(n: number) {
+        return bounds[0] + (bounds[1] - bounds[0]) * n;
+    }
+
+    function setValue(n: number) {
+        normalizedValue = normalise(n);
+        element.value = getValue().toString();
+        previousNormalisedValue = normalizedValue;
+    }
+
+    function getValue(): number {
+        return Math.trunc(denormalise(normalizedValue));
+    }
+
+    const state = {isDragging: false, handler: [(v: number) => {}]};
+
+
+    function bind(h: (v: number) => void) {
+        state.handler.push(h);
+    }
+
+    element.addEventListener("dblclick", (e) => {
+        const actualValue = initial;
+        setValue(actualValue);
+        state.handler.forEach(h => h(actualValue));
+    });
+
+    element.addEventListener("mousedown", (e) => {
+        state.isDragging = true;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+        if (state.isDragging) {
+            const delta = (e.movementX - e.movementY)/100;
+            normalizedValue = clamp(normalizedValue+delta);
+            const actualValue = denormalise(normalizedValue);
+            setValue(actualValue);
+            state.handler.forEach(h => h(actualValue));
+        }
+    })
+
+    window.addEventListener("mouseup", (e) => {
+        state.isDragging = false;
+    })
+
+
+    return {
+        element,
+        get value(): number { return getValue(); },
+        set value(v: number) { setValue(v); },
+        bind
+    };
+}
+export type RangeSelectT = ReturnType<typeof RangeSelect>

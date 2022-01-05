@@ -21,7 +21,6 @@ import {
     AutoPilotUnit
 } from "./interface.js";
 
-
 function WanderingParameter(param: NumericParameter, scaleFactor = 1/400) {
     const [min,max] = param.bounds;
 

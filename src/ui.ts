@@ -14,7 +14,7 @@ import {
 } from "./interface.js";
 import {textNoteToNumber} from "./audio.js";
 import {MidiT} from "./midi.js";
-import {Dial} from "./dial.js";
+import {Dial, RangeSelect} from "./dial.js";
 
 const defaultColors = {
     bg: "#222266",
@@ -23,8 +23,8 @@ const defaultColors = {
     glide: "#CCAA88",
     text: "#CCCCFF",
     highlight: "rgba(255,255,255,0.2)",
-    grid1: "rgba(255,255,255,0.2)",
-    grid2: "rgba(255,255,255,0.5)",
+    grid1: "rgba(255,255,255,0.1)",
+    grid2: "rgba(255,255,255,0.3)",
     dial: "#AA88CC"
 }
 type ColorScheme = { [color in keyof typeof defaultColors]: string; };
@@ -38,7 +38,7 @@ function DialSet(parameters: {[key: string]: NumericParameter} | NumericParamete
 
     params.forEach(param => {
         //const param = parameters[p];
-        const dial = Dial(param.bounds, param.name, defaultColors.dial, defaultColors.text);
+        const dial = Dial(param.value, param.bounds, param.name, defaultColors.dial, defaultColors.text);
 
         // Change the parameter if we move the dial
         dial.bind(v => { param.value = v });
@@ -69,10 +69,17 @@ function MidiControls(midiDevice: NumericParameter, deviceNames: string[], param
         label.classList.add("param-name");
         label.append(document.createTextNode(param.name + ":"));
 
-        const inp = numberInput(param);
-
         container.append(label);
-        container.append(inp);
+
+        const dial = RangeSelect(param.value, param.bounds, param.name);
+
+        // Change the parameter if we move the dial
+        dial.bind(v => { param.value = v });
+
+        // Move the dial if the parameter changes elsewhere
+        param.subscribe(v => dial.value = v);
+
+        container.append(dial.element);
     })
 
     return container;
@@ -126,20 +133,6 @@ function optionList(param: NumericParameter, options: string[]) {
     }
 
     return sel;
-}
-
-function numberInput(param: NumericParameter) {
-    const inp = document.createElement("input");
-    inp.classList.add("number-input");
-    inp.type = "number";
-    inp.value = param.value.toString();
-    inp.min = param.bounds[0].toString();
-    inp.max =param.bounds[1].toString();
-
-    param.subscribe(v => inp.value = param.value.toString());
-    inp.addEventListener("change", () => param.value = +inp.value);
-
-    return inp;
 }
 
 function label(text: string) {
@@ -202,8 +195,8 @@ function PatternDisplay(patternParam: PatternParameter, stepParam: NumericParame
             g.stroke();
         }
 
-        g.strokeStyle = colors.grid1;
         for (let i = 0; i < 80; i++) {
+            g.strokeStyle = i % 12 == 0 ? colors.grid2 : colors.grid1;
             const y = h - (i * vScale);
             g.beginPath();
             g.moveTo(0, y);
@@ -250,6 +243,15 @@ function DrumDisplay(pattern: GeneralisedParameter<DrumPattern>, mutes: Generali
         const g = canvas.getContext("2d") as CanvasRenderingContext2D;
         g.fillStyle = colors.bg;
         g.fillRect(0, 0, w, h);
+
+        for (let i = 0; i < 16; i+=4) {
+            g.strokeStyle = i % 4 == 0 ? colors.grid2 : colors.grid1;
+            const x = w * i / 16;
+            g.beginPath();
+            g.moveTo(x, 0);
+            g.lineTo(x, h);
+            g.stroke();
+        }
 
         for (let i = 0; i < 16; i++) {
             const x = w * i / 16;
