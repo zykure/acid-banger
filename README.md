@@ -6,9 +6,34 @@ An algorithmic human-computer techno jam - now even more spicy
 
 Built in Typescript with the WebAudio API.
 
-Live version running at [zykure.github.io/acid-banger/](https://zykure.github.io/acid-banger/)
+Live version running at [**zykure.github.io/acid-banger**](https://zykure.github.io/acid-banger/)
 
 Many thanks to [vitling](https://music.vitling.xyz) for creating this awesome project! Please consider supporting his work (see below)
+
+## Features
+
+* Two software "Three-Oh" synthesizers (square and sawtooth waveforms)
+  * Controllable parameters: Filter Cutoff, Filter Resonance, Envelope Mod, Decay Time, Distortion
+  * 16-step sequencer with auto-generated patterns
+  * Automatically controlled parameters (for those sweet filter sweeps)
+* One software "Nine-Oh" drum machine
+  * Mute-able drum sounds: Bass Drum, Open Hi-hat, Closed Hi-hat, Snare Drum, Clap
+  * 16-step sequencer with auto-generated patterns
+  * Automatically muted/unmuted drum sounds (to spice up the mix)
+* Autopilot feature recreates filter patterns, moves parameter knobs, mutes drum parts
+* Effects section with software delay
+  * Delay Time is synced to BPM with 3/4 note length
+  * Controllable parameters: Delay mix (dry/wet), Delay Feedback
+* Software clock device with user controlled BPM
+* Audio analysis section with oscilloscope and frequency spectrum
+* MIDI interface
+  * Thanks to WebMIDI, you can control hardware symths with this software
+  * Each software instrument can control its own MIDI device
+  * The pitch can be changed for each instrument (in semitones)
+  * MIDI control messages are supported for the instrument's parameters (e.g. cutoff)
+  * Additional MIDI control messages can be sent for "trigger" events
+    * You can use this to enable/disable different waveforms on your synth, very useful when routing multiple instruments to one external synth
+    * _Hint: set Trigger CC to control different VCO mix knobs on your synth for each instrument, this will turn on/off voices as needed_
 
 
 ## Support vitling
