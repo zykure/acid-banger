@@ -121,12 +121,14 @@ button:hover, select:hover, input:hover {
 }
 
 .midi-controls {
-    margin-left: 50px;
+    margin-left: 10px;
     padding: 5px 0px;
+    font-size: 80%;
 }
 
 .midi-controls * {
     margin-left: 10px;
+    font-size: 80%;
 }
 
 .params.horizontal {

@@ -41,8 +41,11 @@ export type ThreeOhMachine = {
         decay: NumericParameter
     },
     midiDevice: NumericParameter,
+    midiPreset: NumericParameter,
     midiControls: {
+        volume: NumericParameter,
         offset: NumericParameter,
+        trigger: NumericParameter,
         cutoff: NumericParameter,
         resonance: NumericParameter,
         envMod: NumericParameter,
@@ -57,7 +60,16 @@ export type NineOhMachine = {
     step: (step: number) => void
     mutes: GeneralisedParameter<boolean>[],
     midiDevice: NumericParameter,
-    midiNotes: NumericParameter[],
+    midiPreset: NumericParameter,
+    midiControls: {
+        volume: NumericParameter,
+        trigger: NumericParameter,
+        pitchBD: NumericParameter,
+        pitchOH: NumericParameter,
+        pitchCH: NumericParameter,
+        pitchSD: NumericParameter,
+        pitchCP: NumericParameter,
+    }
 }
 
 export type NoteGenerator = {
