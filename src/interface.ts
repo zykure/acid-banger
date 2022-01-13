@@ -133,6 +133,7 @@ export type ProgramState = {
     notes: ThreeOhMachine[],
     drums: NineOhMachine,
     gen: NoteGenerator,
-    delay: DelayUnit,
-    clock: ClockUnit
+    delay: DelayUnit
+    clock: ClockUnit,
+    masterVolume: NumericParameter
 }

@@ -498,7 +498,8 @@ async function start() {
         drums: await NineOhUnit(audio, midi, clock.bpm),
         gen,
         delay,
-        clock
+        clock,
+        masterVolume: parameter("Volume", [0,1], 0.5)
     }
 
     if (midi) {
@@ -506,6 +507,8 @@ async function start() {
         clock.bpm.subscribe(b => midi.noteLength = (1/4) * (60000/b));
         midi.startClock(clock.bpm);
     }
+
+    programState.masterVolume.subscribe(newVolume => { audio.master.in.gain.value = newVolume; });
 
     clock.currentStep.subscribe(step => [...programState.notes, programState.drums].forEach(d => d.step(step)));
     const autoPilot = AutoPilot(programState);
