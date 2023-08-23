@@ -55,6 +55,17 @@ export const midiControlPresets = new Map([
          decay:      17,  // Amp Decay
          distortion: -1,
     }],
+    ["TD-3-MO", {
+        // Values taken from trial & error, only two CC's are supported
+         volume:     63,
+         offset:      0,
+         trigger:    -1,
+         cutoff:     74,  // Cutoff
+         resonance:  -1,
+         envMod:     -1,
+         decay:      -1,
+         distortion: -1,
+    }],
 ]);
 
 
