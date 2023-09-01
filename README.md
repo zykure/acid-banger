@@ -10,6 +10,15 @@ Live version running at [**zykure.github.io/acid-banger**](https://zykure.github
 
 Many thanks to [vitling](https://music.vitling.xyz) for creating this awesome project! Please consider supporting his work (see below)
 
+## Dependencies
+
+This webapp is written in Typescript and needs additional packages for WebMIDI support.
+
+On an Ubuntu system, install the depdencies by running the command:
+```
+sudo apt install -y npm node-typescript webpack
+```
+
 ## Features
 
 * Two software "Three-Oh" synthesizers (square and sawtooth waveforms)
