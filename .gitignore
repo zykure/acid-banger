@@ -4,6 +4,7 @@
 *.tmp
 
 *.json
+dist*
 dist/
 js/
 node_modules/

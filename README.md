@@ -19,6 +19,30 @@ On an Ubuntu system, install the depdencies by running the command:
 sudo apt install -y npm node-typescript webpack
 ```
 
+Then, execute the `build.sh` script to produce the output files in the `./dist` directory.
+
+## Testing
+
+To run this webapp locally, you need a webserver that can serve static files. An easy solution is Nginx.
+
+A basic setup (on Ubuntu) can be configured by running the following commands in your source directory:
+```
+sudo apt install -y nginx
+
+# Create server directory
+sudo mkdir /var/www/html/acid-banger
+sudo chown $USER:$USER /var/www/html/acid-banger
+
+# Link server directory to source repository
+ln -s /var/www/html/acid-banger ./dist
+```
+
+This should enable you to run the `build.sh` script and automatically update the webserver files.
+
+(If the `./dist` directory already exists, you need to move or rename it beforehand.)
+
+
+
 ## Features
 
 * Two software "Three-Oh" synthesizers (square and sawtooth waveforms)
