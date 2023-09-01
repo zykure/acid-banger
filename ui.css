@@ -36,7 +36,7 @@ a {
     }
 }
 
-.machine,.control-group {
+.machine, .control-group {
 
     background-color: black;
     display: grid;
@@ -111,6 +111,8 @@ button:hover, select:hover, input:hover {
 }
 
 .trigger-button {
+    height:50%;
+    width:25px;
     font-size:20px;
     padding:0;
     text-align: center;

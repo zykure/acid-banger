@@ -33,6 +33,7 @@ export type PatternParameter = GeneralisedParameter<Pattern>;
 export type ThreeOhMachine = {
     pattern: GeneralisedParameter<Pattern>,
     newPattern: Trigger
+    restorePattern: Trigger,
     step: (step: number) => void
     parameters: {
         cutoff: NumericParameter,
@@ -41,6 +42,7 @@ export type ThreeOhMachine = {
         decay: NumericParameter
     },
     midiDevice: NumericParameter,
+    midiChannel: NumericParameter,
     midiPreset: NumericParameter,
     midiControls: {
         volume: NumericParameter,
@@ -57,9 +59,11 @@ export type ThreeOhMachine = {
 export type NineOhMachine = {
     pattern: GeneralisedParameter<DrumPattern>,
     newPattern: Trigger,
+    restorePattern: Trigger,
     step: (step: number) => void
     mutes: GeneralisedParameter<boolean>[],
     midiDevice: NumericParameter,
+    midiChannel: NumericParameter,
     midiPreset: NumericParameter,
     midiControls: {
         volume: NumericParameter,

@@ -37,10 +37,9 @@ sudo chown $USER:$USER /var/www/html/acid-banger
 ln -s /var/www/html/acid-banger ./dist
 ```
 
-This should enable you to run the `build.sh` script and automatically update the webserver files.
+This should enable you to run the `build.sh` script and automatically update the webserver files. The webapp is then available at http://localhost/acid-banger/ with default Nginx settings.
 
 (If the `./dist` directory already exists, you need to move or rename it beforehand.)
-
 
 
 ## Features

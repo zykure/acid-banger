@@ -53,7 +53,8 @@ function DialSet(parameters: {[key: string]: NumericParameter} | NumericParamete
     return container;
 }
 
-function MidiControls(midiDevice: NumericParameter, deviceNames: string[], midiPreset: NumericParameter, presetNames: string[],
+function MidiControls(midiDevice: NumericParameter, deviceNames: string[], midiChannel: NumericParameter,
+                      midiPreset: NumericParameter, presetNames: string[],
                       parameters: {[key: string]: NumericParameter} | NumericParameter[], ...classes: string[]) {
     const params = Array.isArray(parameters) ? parameters : Object.keys(parameters).map(k => parameters[k]);
 
@@ -72,6 +73,23 @@ function MidiControls(midiDevice: NumericParameter, deviceNames: string[], midiP
 
     const devices = optionList(midiDevice, deviceNames);
     deviceBbox.append(devices);
+
+
+    const channelBox = document.createElement("div");
+    channelBox.classList.add("param-box");
+    container.append(channelBox);
+
+    const channelLabel = document.createElement("span");
+    channelLabel.classList.add("param-name");
+    channelLabel.append(document.createTextNode("MIDI Channel:"));
+    channelBox.append(channelLabel);
+
+    var channelNames: string[] = [];
+    for (let ch = 0; ch < 16; ch++)
+        channelNames.push(ch.toString());
+
+    const channels = optionList(midiChannel, channelNames);
+    channelBox.append(channels);
 
 
     const presetBox = document.createElement("div");
@@ -115,7 +133,24 @@ function MidiControls(midiDevice: NumericParameter, deviceNames: string[], midiP
 function triggerButton(target: Trigger) {
     const but = document.createElement("button");
     but.classList.add("trigger-button");
+    but.title = "Trigger";
     but.innerText = "⟳";
+
+    target.subscribe(v => {
+        if (v) but.classList.add("waiting"); else but.classList.remove("waiting");
+    });
+    but.addEventListener("click", function () {
+        target.value = true;
+    })
+
+    return but;
+}
+
+function restoreButton(target: Trigger) {
+    const but = document.createElement("button");
+    but.classList.add("trigger-button");
+    but.title = "Restore";
+    but.innerText = "⤾";
 
     target.subscribe(v => {
         if (v) but.classList.add("waiting"); else but.classList.remove("waiting");
@@ -130,6 +165,7 @@ function triggerButton(target: Trigger) {
 function toggleButton(param: GeneralisedParameter<boolean>, ...classes: string[]) {
     const but = document.createElement("button");
     but.classList.add(...classes);
+    but.title = "Toggle";
     but.innerText = param.name;
 
     but.addEventListener("click", () => param.value = !param.value);
@@ -197,6 +233,12 @@ function group(...contents: HTMLElement[]) {
     return element;
 }
 
+function buttonGroup(...contents: HTMLElement[]) {
+    const element = document.createElement("div");
+    element.classList.add("button-group");
+    element.append(...contents);
+    return element;
+}
 
 function PatternDisplay(patternParam: PatternParameter, stepParam: NumericParameter,  colors: ColorScheme = defaultColors) {
     const canvas = document.createElement("canvas");
@@ -416,20 +458,26 @@ export function UI(state: ProgramState, autoPilot: AutoPilotUnit, analyser: Anal
     const noteMachines = state.notes.map((n, i) => machine(
         label("303-0" + (i+1)),
         group(
-            triggerButton(n.newPattern),
+            buttonGroup(
+                triggerButton(n.newPattern),
+                restoreButton(n.restorePattern),
+            ),
             PatternDisplay(n.pattern, state.clock.currentStep),
             DialSet(n.parameters),
-            midi ? MidiControls(n.midiDevice, deviceNames, n.midiPreset, notePresetNames, n.midiControls, "horizontal") : emptyElement,
+            midi ? MidiControls(n.midiDevice, deviceNames, n.midiChannel, n.midiPreset, notePresetNames, n.midiControls, "horizontal") : emptyElement,
         )
     ));
 
     const drumMachine = machine(
         label("909-XX"),
         group(
-            triggerButton(state.drums.newPattern),
+            buttonGroup(
+                triggerButton(state.drums.newPattern),
+                restoreButton(state.drums.restorePattern),
+            ),
             DrumDisplay(state.drums.pattern, state.drums.mutes, state.clock.currentStep),
             Mutes(state.drums.mutes),
-            midi ? MidiControls(state.drums.midiDevice, deviceNames, state.drums.midiPreset, drumPresetNames, state.drums.midiControls, "horizontal") : emptyElement,
+            midi ? MidiControls(state.drums.midiDevice, deviceNames, state.drums.midiChannel, state.drums.midiPreset, drumPresetNames, state.drums.midiControls, "horizontal") : emptyElement,
         )
     )
 

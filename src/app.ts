@@ -126,9 +126,12 @@ function WanderingParameter(param: NumericParameter, scaleFactor = 1/400) {
 function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, output: AudioNode, bpm: NumericParameter, gen: NoteGenerator, patternLength: number=16): ThreeOhMachine {
     const synth = audio.ThreeOh(waveform, output);
     const midiDevice = parameter("Device", [0, Infinity], 0);
+    const midiChannel = parameter("MIDI Channel", [0, 15], 0);
     const midiPreset = parameter("Preset", [0, Infinity], 0);
     const pattern = genericParameter<Pattern>("Pattern", []);
+    const savedPattern = genericParameter<Pattern>("Pattern", []);
     const newPattern = trigger("New Pattern Trigger", true);
+    const restorePattern = trigger("Restore Pattern Trigger", false);
 
     const parameters = {
         cutoff: parameter("Cutoff", [30,700], 400),
@@ -155,28 +158,40 @@ function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, outpu
 
     function step(index: number) {
         if ((index === 0 && newPattern.value == true) || pattern.value.length == 0) {
+            savedPattern.value = pattern.value;
             pattern.value = gen.createPattern();
             newPattern.value = false;
+        }
+
+        if (index === 0 && restorePattern.value == true && savedPattern.value.length > 0) {
+            const tempPattern = pattern.value;
+            pattern.value = savedPattern.value;
+            savedPattern.value = tempPattern;
+            restorePattern.value = false;
+            newPattern.value = false;
+        }
+        else if (restorePattern.value == true && savedPattern.value.length == 0) {
+            restorePattern.value = false;
         }
 
         // if (midi) {
         //     // send 6 clock pulses per 4 steps (24 per quarter note)
         //     for (let i = 0; i < 6; i++)
-        //         window.setTimeout(() => { midi.OutputDevice(midiDevice.value).clockPulse(); }, (60000/bpm.value)*(i/24));
+        //         window.setTimeout(() => { midi.OutputDevice(midiDevice.value, midiChannel.value).clockPulse(); }, (60000/bpm.value)*(i/24));
         // }
 
         const slot = pattern.value[index % patternLength];
         if (slot.note != "-") {
             synth.noteOn(slot.note, slot.accent, slot.glide);
             if (midi) {
-                midi.OutputDevice(midiDevice.value).controlChange(midiControls.trigger.value, midiControls.volume.value);
-                midi.OutputDevice(midiDevice.value).noteOn(slot.note, slot.accent, slot.glide, midiControls.offset.value);
+                midi.OutputDevice(midiDevice.value, midiChannel.value).controlChange(midiControls.trigger.value, midiControls.volume.value);
+                midi.OutputDevice(midiDevice.value, midiChannel.value).noteOn(slot.note, slot.accent, slot.glide, midiControls.offset.value);
             }
         } else {
             synth.noteOff();
             if (midi) {
-                //midi.OutputDevice(midiDevice.value).noteOff();
-                midi.OutputDevice(midiDevice.value).controlChange(midiControls.trigger.value, 0x00);
+                //midi.OutputDevice(midiDevice.value, midiChannel.value).noteOff();
+                midi.OutputDevice(midiDevice.value, midiChannel.value).controlChange(midiControls.trigger.value, 0x00);
             }
         }
     }
@@ -193,7 +208,7 @@ function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, outpu
             if (output) {
                 var deviceName = output.manufacturer + " " + output.name;
                 console.log("MIDI output device: " + deviceName);
-                midi.OutputDevice(midiDevice.value).allNotesOff();
+                midi.OutputDevice(midiDevice.value, midiChannel.value).allNotesOff();
 
                 // var hasPreset = false;
                 // midiControlPresets.forEach((preset, key) => {
@@ -221,6 +236,9 @@ function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, outpu
             }
         });
 
+        midiChannel.subscribe(c => {
+        });
+
         midiPreset.subscribe(d => {
             var presetName = Array.from(midiControlPresets.keys())[midiPreset.value];
             console.log("MIDI control preset: " + presetName);
@@ -240,7 +258,7 @@ function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, outpu
         function sendMidiControl(param: NumericParameter, control: NumericParameter) {
             var v = Math.trunc((param.value - param.bounds[0]) / (param.bounds[1] - param.bounds[0]) * 127);  // convert to MIDI range
             if (midi && control.value >= 0) {
-                midi.OutputDevice(midiDevice.value).controlChange(control.value, v);
+                midi.OutputDevice(midiDevice.value, midiChannel.value).controlChange(control.value, v);
             }
         }
 
@@ -256,17 +274,21 @@ function ThreeOhUnit(audio: AudioT, midi: MidiT, waveform: OscillatorType, outpu
         pattern,
         parameters,
         midiDevice,
+        midiChannel,
         midiPreset,
         midiControls,
-        newPattern
+        newPattern,
+        restorePattern
     }
 }
 
 async function NineOhUnit(audio: AudioT, midi: MidiT, bpm: NumericParameter): Promise<NineOhMachine> {
     const drums = await audio.SamplerDrumMachine(["samples/bd01.mp4","samples/oh01.mp4","samples/hh01.mp4","samples/sd02.mp4","samples/cp01.mp4"])
     const midiDevice = parameter("MIDI Device", [0, Infinity], 0);
+    const midiChannel = parameter("MIDI Channel", [0, 15], 0);
     const midiPreset = parameter("Preset", [0, Infinity], 0);
     const pattern = genericParameter<DrumPattern>("Drum Pattern", []);
+    const savedPattern = genericParameter<DrumPattern>("Drum Pattern", []);
     const mutes = [
         genericParameter("Mute BD", false),
         genericParameter("Mute OH", false),
@@ -295,18 +317,31 @@ async function NineOhUnit(audio: AudioT, midi: MidiT, bpm: NumericParameter): Pr
     }
 
     const newPattern = trigger("New Pattern Trigger", true);
+    const restorePattern = trigger("Restore Pattern Trigger", false);
     const gen = NineOhGen();
 
     function step(index: number) {
         if ((index == 0 && newPattern.value == true) || pattern.value.length == 0) {
+            savedPattern.value = pattern.value;
             pattern.value = gen.createPatterns(true);
             newPattern.value = false;
+        }
+
+        if (index === 0 && restorePattern.value == true && savedPattern.value.length > 0) {
+            const tempPattern = pattern.value;
+            pattern.value = savedPattern.value;
+            savedPattern.value = tempPattern;
+            restorePattern.value = false;
+            newPattern.value = false;
+        }
+        else if (restorePattern.value == true && savedPattern.value.length == 0) {
+            restorePattern.value = false;
         }
 
         // if (midi) {
         //     // send 6 clock pulses per step (24 per quarter note)
         //     for (let i = 0; i < 6; i++)
-        //         window.setTimeout(() => { midi.OutputDevice(midiDevice.value).clockPulse(); }, (60000/bpm.value)*(i/24));
+        //         window.setTimeout(() => { midi.OutputDevice(midiDevice.value, midiChannel.value).clockPulse(); }, (60000/bpm.value)*(i/24));
         // }
 
         var hasNotes = false;
@@ -317,15 +352,15 @@ async function NineOhUnit(audio: AudioT, midi: MidiT, bpm: NumericParameter): Pr
                 hasNotes = true;
                 if (midi) {
                     var note =  + middleC;
-                    midi.OutputDevice(midiDevice.value).controlChange(midiControls.trigger.value, midiControls.volume.value);
-                    midi.OutputDevice(midiDevice.value).noteOn(midiNotes[i].value, false, false);
+                    midi.OutputDevice(midiDevice.value, midiChannel.value).controlChange(midiControls.trigger.value, midiControls.volume.value);
+                    midi.OutputDevice(midiDevice.value, midiChannel.value).noteOn(midiNotes[i].value, false, false);
                 }
             }
         }
 
         if (midi) {
             if (! hasNotes)
-                midi.OutputDevice(midiDevice.value).controlChange(midiControls.trigger.value, 0x00);
+                midi.OutputDevice(midiDevice.value, midiChannel.value).controlChange(midiControls.trigger.value, 0x00);
         }
     }
 
@@ -334,8 +369,11 @@ async function NineOhUnit(audio: AudioT, midi: MidiT, bpm: NumericParameter): Pr
             var output = midi.getOutput(d);
             if (output) {
                 console.log("MIDI output device: " + output.manufacturer + " " + output.name);
-                midi.OutputDevice(midiDevice.value).allNotesOff();
+                midi.OutputDevice(midiDevice.value, midiChannel.value).allNotesOff();
             }
+        });
+
+        midiChannel.subscribe(c => {
         });
 
         midiPreset.subscribe(d => {
@@ -360,9 +398,11 @@ async function NineOhUnit(audio: AudioT, midi: MidiT, bpm: NumericParameter): Pr
         pattern,
         mutes,
         midiDevice,
+        midiChannel,
         midiPreset,
         midiControls,
-        newPattern
+        newPattern,
+        restorePattern
     }
 }
 

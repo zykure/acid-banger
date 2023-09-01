@@ -56,15 +56,15 @@ export function Midi(midiAccess: any, noteLength: number = 100) {
         window.setTimeout(startClock, (60000/bpm.value)*(1/24));
     }
 
-    function OutputDevice(portID: string | number) {
+    function OutputDevice(portID: string | number, midiCh: number) {
         function noteOn(note: FullNote | number, accent: boolean = false, glide: boolean = false, offset: number = 0) {
             if (note < 0)
                 return;
             var midiNote = typeof(note) === 'number' ? note : textNoteToNumber(note);
             midiNote += offset;
             var midiLength = glide ? noteLength : noteLength / 2;
-            const noteOnMessage = [0x90, midiNote, accent ? 0x7f : 0x5f];
-            const noteOffMessage = [0x80, midiNote, 0x40];
+            const noteOnMessage = [0x90 + midiCh, midiNote, accent ? 0x7f : 0x5f];
+            const noteOffMessage = [0x80 + midiCh, midiNote, 0x40];
             var output = getOutput(portID);
             if (output) {
                 //console.log("Sending MIDI message: ", noteOnMessage, noteOffMessage)
@@ -78,7 +78,7 @@ export function Midi(midiAccess: any, noteLength: number = 100) {
                 return;
             var midiNote = typeof(note) === 'number' ? note : textNoteToNumber(note);
             midiNote += offset;
-            const noteOffMessage = [0x80, midiNote, 0x40];
+            const noteOffMessage = [0x80 + midiCh, midiNote, 0x40];
             var output = getOutput(portID);
             if (output) {
                 //console.log("Sending MIDI message: ", noteOffMessage)
@@ -98,7 +98,7 @@ export function Midi(midiAccess: any, noteLength: number = 100) {
         function controlChange(control: number, value: number) {
             if (control < 0)
                 return;
-            const controlChangeMessage = [0xB0, control, value];
+            const controlChangeMessage = [0xB0 + midiCh, control, value];
             var output = getOutput(portID);
             if (output) {
                 //console.log("Sending MIDI message: ", controlChangeMessage)
