@@ -8,6 +8,7 @@ import {NumericParameter} from "./interface.js";
 import {FullNote, textNoteToNumber} from "./audio.js";
 
 export function Midi(midiAccess: any, noteLength: number = 100) {
+
     function listInputsAndOutputs() {
         for (var entry of midiAccess.inputs) {
             var input = entry[1];
@@ -57,31 +58,29 @@ export function Midi(midiAccess: any, noteLength: number = 100) {
     }
 
     function OutputDevice(portID: string | number, midiCh: number) {
-        function noteOn(note: FullNote | number, accent: boolean = false, glide: boolean = false, offset: number = 0) {
+        function noteOn(note: FullNote | number, velocity: number = 100, length: number = 100, offset: number = 0) {
             if (note < 0)
                 return;
-            var midiNote = typeof(note) === 'number' ? note : textNoteToNumber(note);
-            midiNote += offset;
-            var midiLength = glide ? noteLength : noteLength / 2;
-            const noteOnMessage = [0x90 + midiCh, midiNote, accent ? 0x7f : 0x5f];
-            const noteOffMessage = [0x80 + midiCh, midiNote, 0x40];
+            const midiNote = typeof(note) === 'number' ? note + 60 - 12 : textNoteToNumber(note);  // number is relative to C0
+            const noteOnMessage = [0x90 + midiCh, midiNote + offset, velocity];
+            const noteOffMessage = [0x80 + midiCh, midiNote + offset, 0x40];
             var output = getOutput(portID);
             if (output) {
-                //console.log("Sending MIDI message: ", noteOnMessage, noteOffMessage)
+                //console.log("Sending MIDI message: ", noteOnMessage);
                 output.send( noteOnMessage );
-                output.send( noteOffMessage, window.performance.now() + midiLength );
+                output.send( noteOffMessage, window.performance.now() + length );
             }
         }
 
         function noteOff(note: FullNote | number, offset: number = 0) {
             if (note < 0)
                 return;
-            var midiNote = typeof(note) === 'number' ? note : textNoteToNumber(note);
+            var midiNote = typeof(note) === 'number' ? note + 60 - 12 : textNoteToNumber(note);  // number is relative to C0 
             midiNote += offset;
             const noteOffMessage = [0x80 + midiCh, midiNote, 0x40];
             var output = getOutput(portID);
             if (output) {
-                //console.log("Sending MIDI message: ", noteOffMessage)
+                //console.log("Sending MIDI message: ", noteOffMessage);
                 output.send( noteOffMessage );
             }
         }
@@ -90,18 +89,20 @@ export function Midi(midiAccess: any, noteLength: number = 100) {
             const notesOffMessage = [0x07B, 0];
             var output = getOutput(portID);
             if (output) {
-                //console.log("Sending MIDI message: ", allNotesOff)
+                //console.log("Sending MIDI message: ", allNotesOff);
                 output.send(allNotesOff)
             }
         }
 
-        function controlChange(control: number, value: number) {
-            if (control < 0)
+        function controlChange(channel: number, value: number, minValue: number = 32, maxValue: number = 96) {
+            if (channel < 0)
                 return;
-            const controlChangeMessage = [0xB0 + midiCh, control, value];
+			value = Math.max(minValue, value);
+			value = Math.min(maxValue, value);
+            const controlChangeMessage = [0xB0 + midiCh, channel, value];
             var output = getOutput(portID);
             if (output) {
-                //console.log("Sending MIDI message: ", controlChangeMessage)
+                //console.log("Sending MIDI message: ", controlChangeMessage);
                 output.send( controlChangeMessage );
             }
         }
@@ -110,7 +111,7 @@ export function Midi(midiAccess: any, noteLength: number = 100) {
         //     const clockMessage = [0xF8];
         //     var output = getOutput(portID);
         //     if (output) {
-        //         //console.log("Sending MIDI message: ", clockMessage)
+        //         //console.log("Sending MIDI message: ", clockMessage.toString(16))
         //         output.send(clockMessage);
         //     }
         // }

@@ -45,14 +45,14 @@ export type ThreeOhMachine = {
     midiChannel: NumericParameter,
     midiPreset: NumericParameter,
     midiControls: {
-        volume: NumericParameter,
-        offset: NumericParameter,
-        trigger: NumericParameter,
-        cutoff: NumericParameter,
-        resonance: NumericParameter,
-        envMod: NumericParameter,
-        decay: NumericParameter,
-        distortion: NumericParameter,
+        //absVolume: NumericParameter,
+        //triggerCC: NumericParameter,
+        cutoffCC: NumericParameter,
+        resonanceCC: NumericParameter,
+        envModCC: NumericParameter,
+        decayCC: NumericParameter,
+        distortionCC: NumericParameter,
+        pitchOffset: NumericParameter,
     }
 }
 
@@ -66,13 +66,18 @@ export type NineOhMachine = {
     midiChannel: NumericParameter,
     midiPreset: NumericParameter,
     midiControls: {
-        volume: NumericParameter,
-        trigger: NumericParameter,
-        pitchBD: NumericParameter,
-        pitchOH: NumericParameter,
-        pitchCH: NumericParameter,
-        pitchSD: NumericParameter,
-        pitchCP: NumericParameter,
+        //absVolume: NumericParameter,
+        //triggerCC: NumericParameter,
+		pitchBD: NumericParameter,
+		channelBD: NumericParameter,
+		pitchOH: NumericParameter,
+		channelOH: NumericParameter,
+		pitchCH: NumericParameter,
+		channelCH: NumericParameter,
+		pitchSD: NumericParameter,
+		channelSD: NumericParameter,
+		pitchCP: NumericParameter,
+		channelCP: NumericParameter,
     }
 }
 

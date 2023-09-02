@@ -31,7 +31,8 @@ const defaultColors = {
 type ColorScheme = { [color in keyof typeof defaultColors]: string; };
 
 
-function DialSet(parameters: {[key: string]: NumericParameter} | NumericParameter[], ...classes: string[]) {
+function DialSet(parameters: {[key: string]: NumericParameter} | NumericParameter[], 
+                 ...classes: string[]) {
     const params = Array.isArray(parameters) ? parameters : Object.keys(parameters).map(k => parameters[k]);
 
     const container = document.createElement("div");
@@ -55,78 +56,102 @@ function DialSet(parameters: {[key: string]: NumericParameter} | NumericParamete
 
 function MidiControls(midiDevice: NumericParameter, deviceNames: string[], midiChannel: NumericParameter,
                       midiPreset: NumericParameter, presetNames: string[],
-                      parameters: {[key: string]: NumericParameter} | NumericParameter[], ...classes: string[]) {
+                      parameters: {[key: string]: NumericParameter} | NumericParameter[], 
+					  ...classes: string[]) {
     const params = Array.isArray(parameters) ? parameters : Object.keys(parameters).map(k => parameters[k]);
 
+	// base container
     const container = document.createElement("div");
     container.classList.add("midi-controls", "params", ...classes);
 
 
-    const deviceBbox = document.createElement("div");
-    deviceBbox.classList.add("param-box");
-    container.append(deviceBbox);
+	// container for MIDI device/channel
+	var paramGroup = document.createElement("div");
+	paramGroup.classList.add("param-group", ...classes);
+	container.append(paramGroup);
 
-    const deviceLabel = document.createElement("span");
-    deviceLabel.classList.add("param-name");
-    deviceLabel.append(document.createTextNode("MIDI Device:"));
-    deviceBbox.append(deviceLabel);
+	{
+		const paramBox = document.createElement("div");
+		paramBox.classList.add("param-box");
+		paramGroup.append(paramBox);
 
-    const devices = optionList(midiDevice, deviceNames);
-    deviceBbox.append(devices);
+		const deviceLabel = document.createElement("span");
+		deviceLabel.classList.add("param-name");
+		deviceLabel.append(document.createTextNode("MIDI Device:"));
+		paramBox.append(deviceLabel);
+
+		const devices = optionList(midiDevice, deviceNames);
+		paramBox.append(devices);
+	}
+
+	{
+		const paramBox = document.createElement("div");
+		paramBox.classList.add("param-box");
+		paramGroup.append(paramBox);
+
+		const channelLabel = document.createElement("span");
+		channelLabel.classList.add("param-name");
+		channelLabel.append(document.createTextNode("MIDI Channel:"));
+		paramBox.append(channelLabel);
+
+		var channelNames: string[] = [];
+		for (let ch = 0; ch < 16; ch++)
+			channelNames.push(ch.toString());
+
+		const channels = optionList(midiChannel, channelNames);
+		paramBox.append(channels);
+	}
+
+	paramGroup = document.createElement("div");
+	paramGroup.classList.add("param-group", ...classes);
+	container.append(paramGroup);
+
+	{
+		const paramBox = document.createElement("div");
+		paramBox.classList.add("param-box");
+		paramGroup.append(paramBox);
+
+		const presetLabel = document.createElement("span");
+		presetLabel.classList.add("param-name");
+		presetLabel.append(document.createTextNode("Control Preset:"));
+		paramBox.append(presetLabel);
+
+		const presets = optionList(midiPreset, presetNames);
+		paramBox.append(presets);
+	}
 
 
-    const channelBox = document.createElement("div");
-    channelBox.classList.add("param-box");
-    container.append(channelBox);
+	const paramValues = Array.from(params.values());
+    for (var i = 0; i < paramValues.length; i++) {
+		
+		const param = paramValues[i];
+		
+		// group pairs of parameters
+		if (i % 2 == 0) {
+			paramGroup = document.createElement("div");
+			paramGroup.classList.add("param-group", ...classes);
+			container.append(paramGroup);
+		}
 
-    const channelLabel = document.createElement("span");
-    channelLabel.classList.add("param-name");
-    channelLabel.append(document.createTextNode("MIDI Channel:"));
-    channelBox.append(channelLabel);
-
-    var channelNames: string[] = [];
-    for (let ch = 0; ch < 16; ch++)
-        channelNames.push(ch.toString());
-
-    const channels = optionList(midiChannel, channelNames);
-    channelBox.append(channels);
-
-
-    const presetBox = document.createElement("div");
-    presetBox.classList.add("param-box");
-    container.append(presetBox);
-
-    const presetLabel = document.createElement("span");
-    presetLabel.classList.add("param-name");
-    presetLabel.append(document.createTextNode("Control Preset:"));
-    presetBox.append(presetLabel);
-
-    const presets = optionList(midiPreset, presetNames);
-    presetBox.append(presets);
-
-
-    params.forEach(param => {
-        const box = document.createElement("div");
-        box.classList.add("param-box");
-        container.append(box);
+        const paramBox = document.createElement("div");
+        paramBox.classList.add("param-box");
+        paramGroup.append(paramBox);
 
         const label = document.createElement("span");
         label.classList.add("param-name");
         label.append(document.createTextNode(param.name + ":"));
-        box.append(label);
+        paramBox.append(label);
 
         const dial = RangeSelect(param.value, param.bounds, param.name);
-
+        paramBox.append(dial.element);
+		
         // Change the parameter if we move the dial
         dial.bind(v => { param.value = v });
 
         // Move the dial if the parameter changes elsewhere
         param.subscribe(v => dial.value = v);
-
-        //container.append(dial.element);
-        box.append(dial.element);
-    })
-
+    }
+	
     return container;
 }
 
